@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:security="http://www.springframework.org/schema/security"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+    <context:component-scan base-package="com.atguigu"></context:component-scan>
+    <mvc:annotation-driven></mvc:annotation-driven>
+
+<!--    开启基于注解的权限支持-->
+    <security:global-method-security pre-post-annotations="enabled"/>
+
+<!--
+    security="none 表示不拦截js目录下的文件
+    /js/** 表示js目录下的所有文件
+-->
+    <security:http pattern="/js/**" security="none"></security:http>
+    <security:http pattern="/css/**" security="none"></security:http>
+    <security:http pattern="/img/**" security="none"></security:http>
+    <security:http pattern="/login.html" security="none"></security:http>
+
+<!--
+    use-expressions 设置为true，表示使用springSecurity表达式
+    auto-config 设置为true，表示自动开启配置，表示springSecurity会自动帮我们生成一个登录页面
+-->
+    <security:http use-expressions="true" auto-config="true">
+<!--        <security:intercept-url pattern="/**" access="hasRole('ROLE_ABC')"></security:intercept-url>-->
+
+        <security:intercept-url pattern="/a.html" access="isAuthenticated()"></security:intercept-url>
+        <security:intercept-url pattern="/b.html" access="hasRole('ROLE_ABC')"></security:intercept-url>
+        <security:intercept-url pattern="/c.html" access="hasRole('ROLE_DEF')"></security:intercept-url>
+        <security:intercept-url pattern="/c.html" access="hasRole('dd')"></security:intercept-url>
+
+<!--
+        login-page:指定登录页面
+        login-processing-url：登录页面要请求的接口地址，配置了该参数，springSecurity就不会拦截此接口（表单提交的地址）
+        default-target-url：指定登录成功后去哪个页面
+        always-use-default-target：设置是否使用指定的默认的登录页面
+        authentication-failure-url：登录失败后跳转的地址
+        username-parameter：登录时的用户名，默认为username
+        password-parameter：登录时的密码，默认为password
+-->
+        <security:form-login login-page="/login.html"
+                             login-processing-url="/login.do"
+                             default-target-url="/index.jsp"
+                             always-use-default-target="true"
+                             authentication-failure-url="/login.html"
+                             username-parameter="username"
+                             password-parameter="password"
+                                ></security:form-login>
+
+        <security:csrf disabled="true"></security:csrf>
+
+        <security:logout logout-url="/logout.do" logout-success-url="/login.html" invalidate-session="true"></security:logout>
+
+    </security:http>
+
+
+
+
+<!--    设置springSecurity认证 -->
+    <security:authentication-manager>
+        <security:authentication-provider user-service-ref="myUserService">
+            <security:password-encoder ref="passwordEncoder"></security:password-encoder>
+        </security:authentication-provider>
+    </security:authentication-manager>
+
+    <bean id="passwordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"></bean>
+
+</beans>
